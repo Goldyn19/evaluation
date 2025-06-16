@@ -56,6 +56,7 @@ export default function AdminPage() {
       });
 
       // Map CSV headers to database field names
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mappedRecords = records.map((record: any) => ({
         stateCode: record['STATECODE'] ? String(record['STATECODE']).replace(/\//g, '') : '', // Ensure string and strip slashes
         lastName: record['LAST NAME'] || '', // Handle potentially missing last name
@@ -89,6 +90,7 @@ export default function AdminPage() {
       }
 
       setSuccess(`Successfully uploaded ${totalRecords} corps members.`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(`Upload failed: ${err.message || 'An unknown error occurred.'}`);
