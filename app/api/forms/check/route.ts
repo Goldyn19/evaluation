@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
+import { authOptions } from '@/lib/authOptions';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session || !session.user?.stateCode) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -15,11 +16,22 @@ export async function GET(req: Request) {
     if (!formType) {
       return NextResponse.json({ error: 'Missing formType' }, { status: 400 });
     }
+
+    // Find the user by stateCode to get the actual user ID
+    const user = await prisma.user.findUnique({
+      where: { stateCode: session.user.stateCode },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const submission = await prisma.formSubmission.findUnique({
-      where: { userId_formType: { userId: session.user.stateCode, formType } },
+      where: { userId_formType: { userId: user.id, formType } },
     });
     return NextResponse.json({ submitted: !!submission });
-  } catch  {
+  } catch (error) {
+    console.error('Error checking form submission:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

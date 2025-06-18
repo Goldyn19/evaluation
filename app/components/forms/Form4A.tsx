@@ -180,6 +180,7 @@ export default function Form4A() {
       try {
         const response = await fetch('/api/forms/check?formType=4A');
         const data = await response.json();
+        console.log(data)
         setHasSubmitted(data.submitted);
       } catch (error) {
         console.error('Error checking form submission:', error);

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { parse } from 'csv-parse/sync';
+import PlatoonStats from '../components/PlatoonStats';
 
 export default function AdminPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -130,12 +131,19 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-4xl w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Admin Dashboard
           </h2>
         </div>
+
+        {/* Platoon Statistics */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <PlatoonStats />
+        </div>
+
+        {/* Existing Upload Section */}
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
           <div>
             <label htmlFor="csv-upload" className="block text-sm font-medium text-gray-700">
