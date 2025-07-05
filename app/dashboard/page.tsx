@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Form4A from '../components/forms/Form4A';
+import Form4B from '../components/forms/Form4B';
 // import Form4B from '../components/forms/Form4B';
 import Image from 'next/image';
 
@@ -103,12 +104,12 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow p-8 min-h-[120px] flex items-center justify-center">
             {isFormActive ? (
               <div className="w-full">
-                <Form4A />
+                {formType === '4B' ? <Form4B /> : <Form4A />}
               </div>
             ) : (
               <div className="w-full flex items-center justify-center">
                 <div className="bg-blue-100 text-blue-900 px-6 py-4 rounded shadow w-full max-w-lg text-center font-semibold text-lg">
-                  FORM 4A CLOSED
+                  FORM {formType} CLOSED
                 </div>
               </div>
             )}
