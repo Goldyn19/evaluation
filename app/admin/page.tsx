@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { parse } from 'csv-parse/sync';
 import PlatoonStats from '../components/PlatoonStats';
+import Form4BStats from '../components/Form4BStats';
 
 export default function AdminPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -17,6 +18,9 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [totalBatches, setTotalBatches] = useState(0);
   const [activeForm, setActiveForm] = useState<'4A' | '4B' | 'NONE'>('NONE');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetConfirmationCode, setResetConfirmationCode] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   if (status === 'loading') {
     return <div>Loading...</div>;
@@ -129,6 +133,42 @@ export default function AdminPage() {
     }
   };
 
+  const handleReset = async () => {
+    if (!resetConfirmationCode.trim()) {
+      setError('Please enter the confirmation code');
+      return;
+    }
+
+    setResetLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/admin/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirmationCode: resetConfirmationCode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to reset database');
+      }
+
+      setSuccess(data.message || 'Database reset successfully');
+      setShowResetModal(false);
+      setResetConfirmationCode('');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reset database. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full space-y-8">
@@ -141,6 +181,11 @@ export default function AdminPage() {
         {/* Platoon Statistics */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <PlatoonStats />
+        </div>
+
+        {/* Form4B Statistics */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Form4BStats />
         </div>
 
         {/* Existing Upload Section */}
@@ -222,7 +267,68 @@ export default function AdminPage() {
               </label>
             </div>
           </div>
+
+          {/* Reset Database Section */}
+          <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <div className="border-t border-gray-200 pt-4 space-y-2">
+              <h3 className="text-lg leading-6 font-medium text-red-900">Danger Zone</h3>
+              <p className="text-sm text-gray-600">Reset the database to clear all users and form submissions. This action cannot be undone.</p>
+              <button
+                onClick={() => setShowResetModal(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Reset Database
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Reset Confirmation Modal */}
+        {showResetModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Database Reset</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  This will permanently delete all users (except admins) and all form submissions. 
+                  This action cannot be undone.
+                </p>
+                <div className="mb-4">
+                  <label htmlFor="confirmation-code" className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter confirmation code: <strong>RESET2024</strong>
+                  </label>
+                  <input
+                    id="confirmation-code"
+                    type="text"
+                    value={resetConfirmationCode}
+                    onChange={(e) => setResetConfirmationCode(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter RESET2024"
+                  />
+                </div>
+                <div className="flex justify-center space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowResetModal(false);
+                      setResetConfirmationCode('');
+                      setError('');
+                    }}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    disabled={resetLoading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                  >
+                    {resetLoading ? 'Resetting...' : 'Reset Database'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -44,6 +44,7 @@ model User {
   image         String?
   stateCode     String    @unique
   lastName      String
+  localGovernment String?
   role          String? @default("USER")
   accounts      Account[]
   sessions      Session[]

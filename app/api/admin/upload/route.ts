@@ -4,6 +4,40 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Function to map state code to local government
+function getLocalGovernmentFromStateCode(stateCode: string): string | null {
+  // Extract the last digit from the state code
+  const lastDigit = parseInt(stateCode.slice(-1));
+  
+  // Map the last digit to local government (using modulo to handle all 20 local governments)
+  const localGovernments = [
+    "Agege",
+    "Ajeromi-Ifelodun",
+    "Alimosho",
+    "Amuwo-Odofin",
+    "Apapa",
+    "Badagry",
+    "Epe",
+    "Eti Osa",
+    "Ibeju-Lekki",
+    "Ifako-Ijaiye",
+    "Ikeja",
+    "Ikorodu",
+    "Kosofe",
+    "Lagos Island",
+    "Lagos Mainland",
+    "Mushin",
+    "Ojo",
+    "Oshodi-Isolo",
+    "Shomolu",
+    "Surulere",
+  ];
+  
+  // Use modulo to map any digit to one of the 20 local governments
+  const index = lastDigit % localGovernments.length;
+  return localGovernments[index];
+}
+
 export async function POST(req: Request) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -35,12 +69,18 @@ export async function POST(req: Request) {
           // Strip all '/' characters from stateCode
           const cleanedStateCode = stateCode.replace(/\//g, '');
 
+          const localGovernment = getLocalGovernmentFromStateCode(cleanedStateCode);
+          
           await prisma.user.upsert({
             where: { stateCode: cleanedStateCode },
-            update: { lastName },
+            update: { 
+              lastName,
+              localGovernment,
+            },
             create: {
               stateCode: cleanedStateCode,
               lastName,
+              localGovernment,
             },
           });
         })
